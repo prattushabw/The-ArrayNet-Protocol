@@ -1,20 +1,22 @@
 #include "hw1.h"
+#include <stdio.h>
+#include <stdlib.h> 
 
 // void print_packet_sf(unsigned char packet[])
 // {
 //     (void)packet;
 // }
 void print_packet_sf(unsigned char packet[]) {
-    unsigned int source_address = (packet[0] << 24) | (packet[1] << 16) | (packet[2] << 8) | packet[3];
-    unsigned int dest_address = (packet[4] << 24) | (packet[5] << 16) | (packet[6] << 8) | packet[7];
-    unsigned int source_port = (packet[8] >> 4) & 0x0F;
-    unsigned int dest_port = packet[8] & 0x0F;
-    unsigned int fragment_offset = (packet[9] << 8) | packet[10];
-    unsigned int packet_length = (packet[11] << 8) | packet[12];
-    unsigned int max_hop_count = (packet[13] >> 3) & 0x1F;
-    unsigned int checksum = (packet[13] & 0x07) << 16 | (packet[14] << 8) | packet[15];
-    unsigned int compression_scheme = (packet[13] >> 1) & 0x03;
-    unsigned int traffic_class = ((packet[14] & 0x80) >> 2) | ((packet[14] & 0x7E) >> 1) | (packet[14] & 0x01);
+    unsigned int source_address = ((packet[0] & 0x7F) << 21) | ((packet[1] & 0xFF) << 13) | ((packet[2] & 0xFF) << 5) | ((packet[3] & 0xF8) >> 3);
+    unsigned int dest_address = ((packet[3] & 0x07) << 25) | ((packet[4] & 0xFF) << 17) | ((packet[5] & 0xFF) << 9) | ((packet[6] & 0xFE) >> 7);
+    unsigned int source_port = ((packet[6] & 0x01) << 3) | ((packet[7] & 0xE0) >> 5);
+    unsigned int dest_port = packet[7] & 0x1F;
+    unsigned int fragment_offset = ((packet[8] & 0x3F) << 8) | (packet[9] & 0xFF);
+    unsigned int packet_length = ((packet[10] & 0x3F) << 8) | (packet[11] & 0xFF);
+    unsigned int max_hop_count = ((packet[12] & 0xF8) >> 3);
+    unsigned int checksum = ((packet[12] & 0x07) << 16) | ((packet[13] & 0xFF) << 8) | (packet[14] & 0xFF);
+    unsigned int compression_scheme = ((packet[15] & 0xC0) >> 6);
+    unsigned int traffic_class = packet[15] & 0x3F;
     
     printf("Source Address: %u\n", source_address);
     printf("Destination Address: %u\n", dest_address);
@@ -29,9 +31,11 @@ void print_packet_sf(unsigned char packet[]) {
     
     // Payload
     printf("Payload: ");
-    for (int i = 16; i < packet_length; i += 4) {
-        int payload_int = (packet[i] << 24) | (packet[i + 1] << 16) | (packet[i + 2] << 8) | packet[i + 3];
+    int payload_start = 16;
+    while (payload_start < packet_length) {
+        int payload_int = (packet[payload_start] << 24) | (packet[payload_start + 1] << 16) | (packet[payload_start + 2] << 8) | packet[payload_start + 3];
         printf("%d ", payload_int);
+        payload_start += 4;
     }
     printf("\n");
 }
