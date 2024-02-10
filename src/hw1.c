@@ -7,14 +7,14 @@
 //     (void)packet;
 // }
 void print_packet_sf(unsigned char packet[]) {
-    unsigned int source_address = ((packet[0] & 0x7F) << 21) | ((packet[1] & 0xFF) << 13) | ((packet[2] & 0xFF) << 5) | ((packet[3] & 0xF8) >> 3);
-    unsigned int dest_address = ((packet[3] & 0x07) << 25) | ((packet[4] & 0xFF) << 17) | ((packet[5] & 0xFF) << 9) | ((packet[6] & 0xFE) >> 7);
-    unsigned int source_port = ((packet[6] & 0x01) << 3) | ((packet[7] & 0xE0) >> 5);
+    unsigned int source_address = ((packet[0] & 0x7F) << 21) | (packet[1] << 13) | (packet[2] << 5) | (packet[3] >> 3);
+    unsigned int dest_address = ((packet[3] & 0x07) << 25) | (packet[4] << 17) | (packet[5] << 9) | (packet[6] >> 7);
+    unsigned int source_port = (packet[6] & 0x7F) << 1 | (packet[7] >> 7);
     unsigned int dest_port = packet[7] & 0x1F;
     unsigned int fragment_offset = ((packet[8] & 0x3F) << 8) | (packet[9] & 0xFF);
-    unsigned int packet_length = ((packet[10] & 0x3F) << 8) | (packet[11] & 0xFF);
-    unsigned int max_hop_count = ((packet[12] & 0xF8) >> 3);
-    unsigned int checksum = ((packet[12] & 0x07) << 16) | ((packet[13] & 0xFF) << 8) | (packet[14] & 0xFF);
+    unsigned int packet_length = ((packet[9] & 0x1F) << 9) | (packet[10] << 1) | (packet[11] >> 7);
+    unsigned int max_hop_count = ((packet[11] & 0x7F) >> 2);
+    unsigned int checksum = ((packet[11] & 0x03) << 21) | (packet[12] << 13) | (packet[13] << 5) | (packet[14] >> 3);
     unsigned int compression_scheme = ((packet[15] & 0xC0) >> 6);
     unsigned int traffic_class = packet[15] & 0x3F;
     
