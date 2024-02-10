@@ -7,14 +7,15 @@
 //     (void)packet;
 // }
 void print_packet_sf(unsigned char packet[]) {
-    unsigned int source_address = ((packet[0] & 0x7F) << 21) | (packet[1] << 13) | (packet[2] << 5) | (packet[3] >> 3);
-    unsigned int dest_address = ((packet[3] & 0x07) << 25) | (packet[4] << 17) | (packet[5] << 9) | (packet[6] >> 7);
-    unsigned int source_port = (packet[6] & 0x7F) << 1 | (packet[7] >> 7);
+    unsigned int source_address = (packet[0] << 20) + (packet[1] << 12) + (packet[2] << 4) + (packet[3] >> 4);
+    unsigned int dest_address = ((packet[3] & 0x0F) << 24) + (packet[4] << 16) + (packet[5] << 8) + packet[6];
+    unsigned int source_port = packet[7] >> 4;
     unsigned int dest_port = packet[7] & 0x1F;
-    unsigned int fragment_offset = ((packet[8] & 0x3F) << 8) | (packet[9] & 0xFF);
-    unsigned int packet_length = ((packet[9] & 0x1F) << 9) | (packet[10] << 1) | (packet[11] >> 7);
-    unsigned int max_hop_count = ((packet[11] & 0x7F) >> 2);
-    unsigned int checksum = ((packet[11] & 0x03) << 21) | (packet[12] << 13) | (packet[13] << 5) | (packet[14] >> 3);
+    unsigned int fragment_offset = (packet[8] << 8) + packet[9];
+    unsigned int packet_length = (packet[10] << 8) + packet[11];
+    unsigned int max_hop_count = packet[12] >> 3;
+    unsigned int checksum = (packet[12] & 0x07) << 20;
+    checksum += (packet[13] << 12) + (packet[14] << 4) + (packet[15] >> 4);
     unsigned int compression_scheme = ((packet[15] & 0xC0) >> 6);
     unsigned int traffic_class = packet[15] & 0x3F;
     
@@ -30,12 +31,12 @@ void print_packet_sf(unsigned char packet[]) {
     printf("Traffic Class: %u\n", traffic_class);
     
     // Payload
-    printf("Payload: ");
-    int payload_start = 16;
-    while (payload_start < packet_length) {
-        int payload_int = (packet[payload_start] << 24) | (packet[payload_start + 1] << 16) | (packet[payload_start + 2] << 8) | packet[payload_start + 3];
-        printf("%d ", payload_int);
-        payload_start += 4;
+    int payload_index = 17;
+    while (payload_index < packet_length) {
+        int payload_value = (packet[payload_index] << 24) + (packet[payload_index+1] << 16) +
+        (packet[payload_index+2] << 8) + packet[payload_index+3];
+        printf("%d\n", payload_value);
+        payload_index += 4;
     }
     printf("\n");
 }
