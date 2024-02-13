@@ -31,12 +31,12 @@ void print_packet_sf(unsigned char packet[]) {
     printf("Traffic Class: %u\n", traffic_class);
     
     // Payload
-    printf("Payload: ");
+    printf("Payload:");
     int payload_index = 16;
     while (payload_index < packet_length) {
         int payload_value = (packet[payload_index] << 24) + (packet[payload_index+1] << 16) +
         (packet[payload_index+2] << 8) + packet[payload_index+3];
-        printf("%d ", payload_value);
+        printf(" %d", payload_value);
         payload_index += 4;
     }
 }
