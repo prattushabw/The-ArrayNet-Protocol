@@ -2,10 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h> 
 
-// void print_packet_sf(unsigned char packet[])
-// {
-//     (void)packet;
-// }
 void print_packet_sf(unsigned char packet[]) {
     unsigned int source_address = (packet[0] << 20) | (packet[1] << 12) + (packet[2] << 4) + (packet[3] >> 4);
     unsigned int dest_address = ((packet[3] & 0x0F) << 24) + (packet[4] << 16) + (packet[5] << 8) + packet[6];
@@ -58,7 +54,6 @@ unsigned int compute_checksum_sf(unsigned char packet[])
     unsigned long sum=source_address +dest_address+source_port+dest_port +fragment_offset+packet_length+max_hop_count+compression_scheme+traffic_class; 
     
     // Payload
- 
     int payload_index = 16;
     while (payload_index < packet_length) {
         int payload_value = (packet[payload_index] << 24) + (packet[payload_index+1] << 16) +
@@ -71,12 +66,42 @@ unsigned int compute_checksum_sf(unsigned char packet[])
 }
 
 unsigned int reconstruct_array_sf(unsigned char *packets[], unsigned int packets_len, int *array, unsigned int array_len) {
-    (void)packets;
-    (void)packets_len;
-    (void)array;
-    (void)array_len;
-    return -1;
+    unsigned int written_integers = 0;
+
+    for (unsigned int i = 0; i < packets_len; ++i) {
+        unsigned char *packet = packets[i];
+
+        // Calculate checksum of the packet
+        unsigned int expected_checksum = compute_checksum_sf(packet);
+
+        // Extract checksum from the packet
+        unsigned int checksum_in_packet = (packet[12] << 16) | (packet[13] << 8) | packet[14];
+
+        // If checksum matches, extract payload and write to array
+        if (expected_checksum == checksum_in_packet) {
+            unsigned int fragment_offset = (packet[8] << 8) | packet[9];
+            unsigned int payload_length = (packet[10] << 8) | packet[11];
+            unsigned int payload_index = fragment_offset / sizeof(int);
+            unsigned int payload_start = 16; // Skip header
+
+            // Ensure payload doesn't exceed array length
+            if (payload_index + payload_length > array_len)
+                payload_length = array_len - payload_index;
+
+            // Write payload to array
+            for (unsigned int j = 0; j < payload_length; ++j) {
+                unsigned int payload_value = (packet[payload_start] << 24) | (packet[payload_start + 1] << 16) |
+                                             (packet[payload_start + 2] << 8) | packet[payload_start + 3];
+                array[payload_index + j] = payload_value;
+                payload_start += 4;
+                ++written_integers;
+            }
+        }
+    }
+
+    return written_integers;
 }
+
 
 unsigned int packetize_array_sf(int *array, unsigned int array_len, unsigned char *packets[], unsigned int packets_len,
                           unsigned int max_payload, unsigned int src_addr, unsigned int dest_addr,
