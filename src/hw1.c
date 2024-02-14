@@ -66,41 +66,46 @@ unsigned int compute_checksum_sf(unsigned char packet[])
 }
 
 unsigned int reconstruct_array_sf(unsigned char *packets[], unsigned int packets_len, int *array, unsigned int array_len) {
-    unsigned int written_integers = 0;
-
-    for (unsigned int i = 0; i < packets_len; ++i) {
-        unsigned char *packet = packets[i];
-
-        // Calculate checksum of the packet
-        unsigned int expected_checksum = compute_checksum_sf(packet);
-
-        // Extract checksum from the packet
-        unsigned int checksum_in_packet = (packet[12] << 16) | (packet[13] << 8) | packet[14];
-
-        // If checksum matches, extract payload and write to array
-        if (expected_checksum == checksum_in_packet) {
-            unsigned int fragment_offset = (packet[8] << 8) | packet[9];
-            unsigned int payload_length = (packet[10] << 8) | packet[11];
-            unsigned int payload_index = fragment_offset / sizeof(int);
-            unsigned int payload_start = 16; // Skip header
-
-            // Ensure payload doesn't exceed array length
-            if (payload_index + payload_length > array_len)
-                payload_length = array_len - payload_index;
-
-            // Write payload to array
-            for (unsigned int j = 0; j < payload_length; ++j) {
-                unsigned int payload_value = (packet[payload_start] << 24) | (packet[payload_start + 1] << 16) |
-                                             (packet[payload_start + 2] << 8) | packet[payload_start + 3];
-                array[payload_index + j] = payload_value;
-                payload_start += 4;
-                ++written_integers;
+        unsigned int written_integers = 0;
+    
+        for (unsigned int i = 0; i < packets_len; ++i) {
+            unsigned char *packet = packets[i];
+    
+            // Calculate checksum of the packet
+            unsigned int expected_checksum = compute_checksum_sf(packet);
+    
+            // Extract checksum from the packet
+            unsigned int checksum = ((packet[12] & 0x7F) << 16) + (packet[13] << 8) + (packet[14]); 
+    
+            // If checksum matches, extract payload and write to array
+            if (expected_checksum == checksum) {
+                unsigned int fragment_offset = (packet[8] << 8) | packet[9];
+                unsigned int payload_index = fragment_offset / sizeof(int);
+                unsigned int payload_start = 16; // Skip header
+    
+                // Extract packet length
+                unsigned int packet_length = ((packet[9] & 0x03) << 12) | (packet[10] << 4) | (packet[11] >> 4);
+    
+                // Iterate over payload bytes and convert them to integers
+                while (payload_start < packet_length + 16 && payload_index < array_len) {
+                    // Convert 4 payload bytes to integer
+                    int payload_value = (packet[payload_start] << 24) | (packet[payload_start + 1] << 16) |
+                                        (packet[payload_start + 2] << 8) | packet[payload_start + 3];
+    
+                    // Write payload value to array at appropriate index
+                    array[payload_index] = payload_value;
+    
+                    // Move to next payload block and array index
+                    payload_start += 4;
+                    ++payload_index;
+                    ++written_integers;
+                }
             }
         }
+    
+        return written_integers;
     }
-
-    return written_integers;
-}
+    
 
 
 unsigned int packetize_array_sf(int *array, unsigned int array_len, unsigned char *packets[], unsigned int packets_len,
