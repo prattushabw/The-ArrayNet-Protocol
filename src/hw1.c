@@ -28,10 +28,6 @@ void print_packet_sf(unsigned char packet[]) {
     printf("Checksum: %u\n", checksum);
     printf("Compression Scheme: %u\n", compression_scheme);
     printf("Traffic Class: %u\n", traffic_class);
-
-    if(packet_length<=16){
-        return;
-    }
     
     // Payload
     printf("Payload:");
