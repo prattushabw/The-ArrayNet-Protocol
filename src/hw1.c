@@ -45,18 +45,17 @@ void print_packet_sf(unsigned char packet[]) {
 unsigned int compute_checksum_sf(unsigned char packet[])
 {
     int divisor = (1 << 23) - 1;
-    unsigned int source_address = (packet[0] << 20) + (packet[1] << 12) + (packet[2] << 4) + (packet[3] >> 4);
+    unsigned int source_address = (packet[0] << 20) | (packet[1] << 12) + (packet[2] << 4) + (packet[3] >> 4);
     unsigned int dest_address = ((packet[3] & 0x0F) << 24) + (packet[4] << 16) + (packet[5] << 8) + packet[6];
     unsigned int source_port = packet[7] >> 4;
-    unsigned int dest_port = packet[7] & 0x1F;
-    unsigned int fragment_offset = (packet[8] << 8) + packet[9];
-    unsigned int packet_length = ((packet[9] & 0x03) << 12)+ (packet[10] << 4) + (packet[11] >> 4);
-    unsigned int max_hop_count = ((packet[11]& 0x0F) << 1)+(packet[12] >> 7);
-    
+    unsigned int dest_port = packet[7] & 0x0F;
+    unsigned int fragment_offset = (packet[8] << 6) + (packet[9] >> 2);
+    unsigned int packet_length = ((packet[9] & 0x03) << 12) + (packet[10] << 4) + (packet[11] >> 4);
+    unsigned int max_hop_count = ((packet[11]& 0x0F) << 1) + (packet[12] >> 7);
     unsigned int compression_scheme = ((packet[15] & 0xC0) >> 6);
     unsigned int traffic_class = packet[15] & 0x3F;
     
-    unsigned long sum=source_address +dest_address+source_port+dest_port +fragment_offset+packet_length+max_hop_count+traffic_class; 
+    unsigned long sum=source_address +dest_address+source_port+dest_port +fragment_offset+packet_length+max_hop_count+compression_scheme+traffic_class; 
     
     // Payload
  
