@@ -1,4 +1,4 @@
-#include "hw1.h"
+//#include "hw1.h"
 #include <stdio.h>
 #include <stdlib.h> 
 
@@ -71,7 +71,7 @@ unsigned int reconstruct_array_sf(unsigned char *packets[], unsigned int packets
         for (unsigned int i = 0; i < packets_len; ++i) {
             unsigned char *packet = packets[i];
     
-            // Calculate checksum of the packet
+            // checksum of the packet
             unsigned int expected_checksum = compute_checksum_sf(packet);
     
             // Extract checksum from the packet
@@ -80,27 +80,34 @@ unsigned int reconstruct_array_sf(unsigned char *packets[], unsigned int packets
             // If checksum matches, extract payload and write to array
             if (expected_checksum == checksum) {
                 unsigned int fragment_offset = (packet[8] << 8) | packet[9];
-                unsigned int payload_index = fragment_offset / sizeof(int);
-                unsigned int payload_start = 16; // Skip header
+                unsigned int payload_index = fragment_offset / sizeof(int); //where to start replacing from
+                unsigned int payload_start = 16; 
     
                 // Extract packet length
                 unsigned int packet_length = ((packet[9] & 0x03) << 12) | (packet[10] << 4) | (packet[11] >> 4);
     
                 // Iterate over payload bytes and convert them to integers
-                while (payload_start < packet_length + 16 && payload_index < array_len) {
+                //payload_start < packet_length &&
+                while ( payload_index < array_len) {
                     // Convert 4 payload bytes to integer
-                    int payload_value = (packet[payload_start] << 24) | (packet[payload_start + 1] << 16) |
-                                        (packet[payload_start + 2] << 8) | packet[payload_start + 3];
+                    int payload_value = (packet[payload_start] << 24) + (packet[payload_start+1] << 16) +
+                    (packet[payload_start+2] << 8) + packet[payload_start+3];
+
+                    
+
     
                     // Write payload value to array at appropriate index
                     array[payload_index] = payload_value;
     
                     // Move to next payload block and array index
                     payload_start += 4;
-                    ++payload_index;
-                    ++written_integers;
+                    payload_index+=1;
+                    written_integers+=1;
+                    
                 }
-            }
+               
+            } 
+            
         }
     
         return written_integers;
