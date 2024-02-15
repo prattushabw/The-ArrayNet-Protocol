@@ -3,7 +3,7 @@
 #include <stdlib.h> 
 
 void print_packet_sf(unsigned char packet[]) {
-    unsigned int source_address = (packet[0] << 20) | (packet[1] << 12) + (packet[2] << 4) + (packet[3] >> 4);
+    unsigned int source_address = (packet[0] << 20) + (packet[1] << 12) + (packet[2] << 4) + (packet[3] >> 4);
     unsigned int dest_address = ((packet[3] & 0x0F) << 24) + (packet[4] << 16) + (packet[5] << 8) + packet[6];
     unsigned int source_port = packet[7] >> 4;
     unsigned int dest_port = packet[7] & 0x0F;
