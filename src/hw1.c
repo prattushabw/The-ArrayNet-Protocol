@@ -117,6 +117,8 @@ unsigned int packetize_array_sf(int *array, unsigned int array_len, unsigned cha
                           unsigned int src_port, unsigned int dest_port, unsigned int maximum_hop_count,
                           unsigned int compression_scheme, unsigned int traffic_class)
 {
+
+    //printf("%d", packets_len);
     unsigned int num_packets = (array_len + max_payload - 1) / max_payload;
     if (num_packets > packets_len) {
         num_packets = packets_len; // Adjust the number of packets if packets_len is not enough
