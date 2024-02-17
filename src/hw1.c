@@ -159,18 +159,18 @@ unsigned int packetize_array_sf(int *array, unsigned int array_len, unsigned cha
         packets[i][14] = checksum & 0xFF;
 
         // Fill payload
-        for (unsigned int j = payload_start; j < payload_end; ++j) {
-            packets[i][16 + (j - payload_start) * 4] = (array[j] >> 24) & 0xFF;
-            packets[i][17 + (j - payload_start) * 4] = (array[j] >> 16) & 0xFF;
-            packets[i][18 + (j - payload_start) * 4] = (array[j] >> 8) & 0xFF;
-            packets[i][19 + (j - payload_start) * 4] = array[j] & 0xFF;
-        }
-        //  for (unsigned int j = payload_start; j < payload_end; ++j) {
-        //     packets[i][16 + (j - payload_start) * 4] = (array[(i*max_payload/4)+j] >> 24) & 0xFF;
-        //     packets[i][17 + (j - payload_start) * 4] = (array[(i*max_payload/4)+j] >> 16) & 0xFF;
-        //     packets[i][18 + (j - payload_start) * 4] = (array[(i*max_payload/4)+j] >> 8) & 0xFF;
-        //     packets[i][19 + (j - payload_start) * 4] = array[(i*max_payload/4)+j] & 0xFF;
+        // for (unsigned int j = payload_start; j < payload_end; ++j) {
+        //     packets[i][16 + (j - payload_start) * 4] = (array[j] >> 24) & 0xFF;
+        //     packets[i][17 + (j - payload_start) * 4] = (array[j] >> 16) & 0xFF;
+        //     packets[i][18 + (j - payload_start) * 4] = (array[j] >> 8) & 0xFF;
+        //     packets[i][19 + (j - payload_start) * 4] = array[j] & 0xFF;
         // }
+         for (unsigned int j = payload_start; j < payload_end; ++j) {
+            packets[i][16 + (j - payload_start) * 4] = (array[(i*max_payload/4)+j] >> 24) & 0xFF;
+            packets[i][17 + (j - payload_start) * 4] = (array[(i*max_payload/4)+j] >> 16) & 0xFF;
+            packets[i][18 + (j - payload_start) * 4] = (array[(i*max_payload/4)+j] >> 8) & 0xFF;
+            packets[i][19 + (j - payload_start) * 4] = array[(i*max_payload/4)+j] & 0xFF;
+        }
     }
 
     return packets_len;
