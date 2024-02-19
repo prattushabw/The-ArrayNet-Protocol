@@ -123,10 +123,10 @@ unsigned int packetize_array_sf(int *array, unsigned int array_len, unsigned cha
     if (num_packets < packets_len) {
         num_packets = packets_len; // Adjust the number of packets if packets_len is not enough
     }
+    unsigned int payload_start = 0;
+    unsigned int payload_end = max_payload/4;
 
     for (unsigned int i = 0; i < num_packets; ++i) {
-        unsigned int payload_start = i * max_payload;
-        unsigned int payload_end = (i + 1) * max_payload;
         if (payload_end > array_len) {
             payload_end = array_len; // Adjust payload_end if it exceeds array_len
         }
@@ -150,8 +150,8 @@ unsigned int packetize_array_sf(int *array, unsigned int array_len, unsigned cha
         packets[i][12] = ((maximum_hop_count & 0x01) << 7);
         packets[i][15]=((compression_scheme & 0x03) << 6) | (traffic_class & 0x3F);
         
-
-         for (unsigned int j = payload_start; j < payload_end / 4; ++j) {
+        //filling payload WRONG
+        for (unsigned int j = payload_start; j < payload_end; ++j) {
             packets[i][16 + (j - payload_start) * 4] = (array[(i*max_payload/4)+j-payload_start] >> 24) & 0xFF;
             packets[i][17 + (j - payload_start) * 4] = (array[(i*max_payload/4)+j-payload_start] >> 16) & 0xFF;
             packets[i][18 + (j - payload_start) * 4] = (array[(i*max_payload/4)+j-payload_start] >> 8) & 0xFF;
@@ -162,7 +162,7 @@ unsigned int packetize_array_sf(int *array, unsigned int array_len, unsigned cha
         // Calculate Checksum
         unsigned int checksum = compute_checksum_sf(packets[i]);
         packets[i][12] |= (checksum >> 16) & 0x7F;
-        packets[i][13] = (checksum >> 8) & 0xFF; //need to be fixed maybe >>8
+        packets[i][13] = (checksum >> 8) & 0xFF; // Wrong
         packets[i][14] = checksum & 0xFF;
         
     }
