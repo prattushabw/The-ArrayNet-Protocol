@@ -151,7 +151,7 @@ unsigned int packetize_array_sf(int *array, unsigned int array_len, unsigned cha
         packets[i][15]=((compression_scheme & 0x03) << 6) | (traffic_class & 0x3F);
         
 
-         for (unsigned int j = payload_start; j < payload_end ; ++j) {
+         for (unsigned int j = payload_start; j < payload_end / 4; ++j) {
             packets[i][16 + (j - payload_start) * 4] = (array[(i*max_payload/4)+j-payload_start] >> 24) & 0xFF;
             packets[i][17 + (j - payload_start) * 4] = (array[(i*max_payload/4)+j-payload_start] >> 16) & 0xFF;
             packets[i][18 + (j - payload_start) * 4] = (array[(i*max_payload/4)+j-payload_start] >> 8) & 0xFF;
