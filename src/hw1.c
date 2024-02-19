@@ -176,7 +176,7 @@ unsigned int packetize_array_sf(int *array, unsigned int array_len, unsigned cha
         }
         unsigned int checksum = compute_checksum_sf(packets[i]);
         packets[i][12] |= (checksum >> 16) & 0x7F;
-        packets[i][13] = ((checksum & 0xFF00)<< 8);
+        packets[i][13] = checksum;
         packets[i][14] = checksum & 0xFF;
         
     }
