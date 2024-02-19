@@ -144,20 +144,26 @@ unsigned int packetize_array_sf(int *array, unsigned int array_len, unsigned cha
         packets[i][6] = dest_addr & 0xFF;
         packets[i][7] = (src_port << 4) | (dest_port & 0xF);
         packets[i][8] = (i * max_payload) >> 6; // Fragment Offset
-
         packets[i][9] = ((i * max_payload) & 0x3F) << 2 | (((payload_end - payload_start)+16) >> 12);
         packets[i][10] = (((payload_end - payload_start)+ 16)>> 4) & 0xFF;
         packets[i][11] = (((payload_end - payload_start) +16)& 0xF) << 4 | ((maximum_hop_count & 0x1E) >> 1);
-        packets[i][12] = ((maximum_hop_count & 0x01) << 7) | ((compression_scheme & 0x03) << 6) | (traffic_class & 0x3F);
+        
+        // unsigned int max_hop_count = ((packet[11]& 0x0F) << 1) + (packet[12] >> 7);
+     
+        packets[i][12] = ((maximum_hop_count & 0x01) << 7);
+        //  | ((compression_scheme & 0x03) << 6) | (traffic_class & 0x3F);
 
+
+        // unsigned int checksum = ((packet[12] & 0x7F) << 16) + (packet[13] << 8) + (packet[14]);
         // Calculate Checksum
         unsigned int checksum = 0;
         for (int j = 0; j < 15; ++j) {
             checksum += packets[i][j];
         }
         packets[i][12] |= (checksum >> 16) & 0x7F;
-        packets[i][13] = (checksum >> 8) & 0xFF;
+        packets[i][13] = (checksum << 8);
         packets[i][14] = checksum & 0xFF;
+        packets[i][15]=((compression_scheme & 0x03) << 6) | (traffic_class & 0x3F);
 
         // Fill payload
         // for (unsigned int j = payload_start; j < payload_end; ++j) {
