@@ -144,28 +144,13 @@ unsigned int packetize_array_sf(int *array, unsigned int array_len, unsigned cha
         packets[i][6] = dest_addr & 0xFF;
         packets[i][7] = (src_port << 4) | (dest_port & 0xF);
         packets[i][8] = (i * max_payload) >> 6; // Fragment Offset
-        packets[i][9] = ((i * max_payload) & 0x3F) << 2 | (((payload_end - payload_start)+16) >> 12);
-        packets[i][10] = (((payload_end - payload_start)+ 16)>> 4) & 0xFF;
-        packets[i][11] = (((payload_end - payload_start) +16)& 0xF) << 4 | ((maximum_hop_count & 0x1E) >> 1);
-        
-        // unsigned int max_hop_count = ((packet[11]& 0x0F) << 1) + (packet[12] >> 7);
-     
+        packets[i][9] = ((i * max_payload) & 0x3F) << 2 | (((payload_end - payload_start)+16) >> 12); //packet length
+        packets[i][10] = (((payload_end - payload_start)+ 16)>> 4) & 0xFF; //packet length
+        packets[i][11] = (((payload_end - payload_start) +16)& 0xF) << 4 | ((maximum_hop_count & 0x1E) >> 1); //packet length
         packets[i][12] = ((maximum_hop_count & 0x01) << 7);
         packets[i][15]=((compression_scheme & 0x03) << 6) | (traffic_class & 0x3F);
-        //  | ((compression_scheme & 0x03) << 6) | (traffic_class & 0x3F);
-
-
-        // unsigned int checksum = ((packet[12] & 0x7F) << 16) + (packet[13] << 8) + (packet[14]);
-        // Calculate Checksum
         
 
-        // Fill payload
-        // for (unsigned int j = payload_start; j < payload_end; ++j) {
-        //     packets[i][16 + (j - payload_start) * 4] = (array[j] >> 24) & 0xFF;
-        //     packets[i][17 + (j - payload_start) * 4] = (array[j] >> 16) & 0xFF;
-        //     packets[i][18 + (j - payload_start) * 4] = (array[j] >> 8) & 0xFF;
-        //     packets[i][19 + (j - payload_start) * 4] = array[j] & 0xFF;
-        // }
          for (unsigned int j = payload_start; j < payload_end / 4; ++j) {
             packets[i][16 + (j - payload_start) * 4] = (array[(i*max_payload/4)+j-payload_start] >> 24) & 0xFF;
             packets[i][17 + (j - payload_start) * 4] = (array[(i*max_payload/4)+j-payload_start] >> 16) & 0xFF;
@@ -174,6 +159,7 @@ unsigned int packetize_array_sf(int *array, unsigned int array_len, unsigned cha
 
             
         }
+        // Calculate Checksum
         unsigned int checksum = compute_checksum_sf(packets[i]);
         packets[i][12] |= (checksum >> 16) & 0x7F;
         packets[i][13] = (checksum >> 8) & 0xFF; //need to be fixed maybe >>8
