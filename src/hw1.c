@@ -157,6 +157,10 @@ unsigned int packetize_array_sf(int *array, unsigned int array_len, unsigned cha
 
         // unsigned int checksum = ((packet[12] & 0x7F) << 16) + (packet[13] << 8) + (packet[14]);
         // Calculate Checksum
+        unsigned int checksum = compute_checksum_sf(packets[i]);
+        packets[i][12] |= (checksum >> 16) & 0x7F;
+        packets[i][13] = checksum; //need to be fixed maybe >>8
+        packets[i][14] = checksum & 0xFF;
         
 
         // Fill payload
@@ -174,10 +178,10 @@ unsigned int packetize_array_sf(int *array, unsigned int array_len, unsigned cha
 
             
         }
-        unsigned int checksum = compute_checksum_sf(packets[i]);
-        packets[i][12] |= (checksum >> 16) & 0x7F;
-        packets[i][13] = checksum;
-        packets[i][14] = checksum & 0xFF;
+        // unsigned int checksum = compute_checksum_sf(packets[i]);
+        // packets[i][12] |= (checksum >> 16) & 0x7F;
+        // packets[i][13] = checksum; //need to be fixed maybe >>8
+        // packets[i][14] = checksum & 0xFF;
         
     }
 
