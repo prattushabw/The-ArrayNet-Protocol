@@ -27,7 +27,7 @@ void print_packet_sf(unsigned char packet[]) {
     
     // Payload
     printf("Payload:");
-    int payload_index = 16;
+    unsigned int payload_index = 16;
     while (payload_index < packet_length) {
         int payload_value = (packet[payload_index] << 24) + (packet[payload_index+1] << 16) +
         (packet[payload_index+2] << 8) + packet[payload_index+3];
@@ -54,7 +54,7 @@ unsigned int compute_checksum_sf(unsigned char packet[])
     unsigned long sum=source_address +dest_address+source_port+dest_port +fragment_offset+packet_length+max_hop_count+compression_scheme+traffic_class; 
     
     // Payload
-    int payload_index = 16;
+    unsigned int payload_index = 16;
     while (payload_index < packet_length) {
         int payload_value = (packet[payload_index] << 24) + (packet[payload_index+1] << 16) +
         (packet[payload_index+2] << 8) + packet[payload_index+3];
@@ -120,7 +120,7 @@ unsigned int packetize_array_sf(int *array, unsigned int array_len, unsigned cha
 
     //printf("%d", packets_len);
     unsigned int num_packets = (array_len + max_payload - 1) / max_payload;
-    if (num_packets > packets_len) {
+    if (num_packets < packets_len) {
         num_packets = packets_len; // Adjust the number of packets if packets_len is not enough
     }
 
@@ -132,7 +132,7 @@ unsigned int packetize_array_sf(int *array, unsigned int array_len, unsigned cha
         }
 
         // Allocate memory for the packet
-        packets[i] = malloc(16+max_payload*10); // 36 bytes for the header and payload (max_payload <= 20 implies packet_length <= 36)
+        packets[i] = malloc(16+max_payload); // 36 bytes for the header and payload (max_payload <= 20 implies packet_length <= 36)
 
         // Set header fields
         packets[i][0] = (src_addr >> 20) & 0xFF;
@@ -165,14 +165,13 @@ unsigned int packetize_array_sf(int *array, unsigned int array_len, unsigned cha
         //     packets[i][18 + (j - payload_start) * 4] = (array[j] >> 8) & 0xFF;
         //     packets[i][19 + (j - payload_start) * 4] = array[j] & 0xFF;
         // }
-         for (unsigned int j = payload_start; j < payload_end; ++j) {
-            packets[i][16 + (j - payload_start) * 4] = (array[(i*max_payload/4)+j] >> 24) & 0xFF;
-            packets[i][17 + (j - payload_start) * 4] = (array[(i*max_payload/4)+j] >> 16) & 0xFF;
-            packets[i][18 + (j - payload_start) * 4] = (array[(i*max_payload/4)+j] >> 8) & 0xFF;
-            packets[i][19 + (j - payload_start) * 4] = array[(i*max_payload/4)+j] & 0xFF;
+         for (unsigned int j = payload_start; j < payload_end / 4; ++j) {
+            packets[i][16 + (j - payload_start) * 4] = (array[(i*max_payload/4)+j-payload_start] >> 24) & 0xFF;
+            packets[i][17 + (j - payload_start) * 4] = (array[(i*max_payload/4)+j-payload_start] >> 16) & 0xFF;
+            packets[i][18 + (j - payload_start) * 4] = (array[(i*max_payload/4)+j-payload_start] >> 8) & 0xFF;
+            packets[i][19 + (j - payload_start) * 4] = array[(i*max_payload/4)+j-payload_start] & 0xFF;
         }
     }
 
     return packets_len;
 }
-
