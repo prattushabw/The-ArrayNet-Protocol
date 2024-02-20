@@ -125,10 +125,17 @@ unsigned int packetize_array_sf(int *array, unsigned int array_len, unsigned cha
     }
     unsigned int payload_start = 0;
     unsigned int payload_end = max_payload/4;
+    unsigned int payload_end_final=0;
+    unsigned int  packet_size=0;
 
-    for (unsigned int i = 0; i < num_packets; ++i) {
-        if (payload_end > array_len) {
-            payload_end = array_len; // Adjust payload_end if it exceeds array_len
+    if (payload_end > array_len) {
+        payload_end_final = array_len%(max_payload/4); // Adjust payload_end if it exceeds array_len
+    }
+    for (unsigned int i = 0; i < num_packets; i++) {
+        if ((i!=num_packets-1)||(payload_end_final==0)){
+            packet_size=16+payload_end*4;
+        }else{
+            packet_size=16+payload_end_final*4;
         }
 
         // Allocate memory for the packet
@@ -144,12 +151,9 @@ unsigned int packetize_array_sf(int *array, unsigned int array_len, unsigned cha
         packets[i][6] = dest_addr & 0xFF;
         packets[i][7] = (src_port << 4) | (dest_port & 0xF);
         packets[i][8] = (i * max_payload) >> 6; // Fragment Offset
-        // packets[i][9] = ((i * max_payload) & 0x3F) << 2 | (((payload_end - payload_start)+16) >> 12); //packet length
-        // packets[i][10] = (((payload_end - payload_start)+ 16)>> 4) & 0xFF; //packet length
-        // packets[i][11] = (((payload_end - payload_start) +16)& 0xF) << 4 | ((maximum_hop_count & 0x1E) >> 1); //packet length POSSIBLY WRONG          1`
-        packets[i][9] = ((i * max_payload) & 0x3F) << 2 | (((payload_end - payload_start)+16) >> 12); //packet length
-        packets[i][10] = (((payload_end - payload_start)+ 16)& 0xFF)>>4 ; //packet length
-        packets[i][11] = (((payload_end - payload_start) +16)& 0xF) << 4 | ((maximum_hop_count & 0x1E) >> 1); //packet length POSSIBLY WRONG 
+        packets[i][9] = ((i * max_payload) & 0x3F) << 2 | (packet_size >> 12); //packet length
+        packets[i][10] = (packet_size& 0xFF)>>4 ; //packet length
+        packets[i][11] = (packet_size& 0xF) << 4 | ((maximum_hop_count & 0x1E) >> 1); //packet length 
         packets[i][12] = ((maximum_hop_count & 0x01) << 7);
         packets[i][15]=((compression_scheme & 0x03) << 6) | (traffic_class & 0x3F);
         
@@ -160,11 +164,12 @@ unsigned int packetize_array_sf(int *array, unsigned int array_len, unsigned cha
             packets[i][18 + (j - payload_start) * 4] = (array[(i*max_payload/4)+j-payload_start] >> 8) & 0xFF;
             packets[i][19 + (j - payload_start) * 4] = array[(i*max_payload/4)+j-payload_start] & 0xFF; 
         }
+        
         // Calculate Checksum
         unsigned int checksum = compute_checksum_sf(packets[i]);
         packets[i][12] |= (checksum >> 16) & 0x7F;
         packets[i][13] = (checksum >> 8) & 0xF; // Wrong
-        packets[i][14] = checksum & 0xFF;// also wrong
+        packets[i][14] = checksum & 0xFF;
         
     }
 
