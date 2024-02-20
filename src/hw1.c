@@ -130,17 +130,16 @@ unsigned int packetize_array_sf(int *array, unsigned int array_len, unsigned cha
     }
     unsigned int payload_start = 0;
     unsigned int payload_end = max_payload/4;
-    unsigned int payload_end_final=array_len%(max_payload/4);
     unsigned int  packet_size=0;
 
-    if (payload_end > array_len) {
-        payload_end_final = array_len%(max_payload/4); // Adjust payload_end if it exceeds array_len
+    if (payload_end <= array_len) {
+        payload_end=max_payload/4;// Adjust payload_end if it exceeds array_len
     }
     for (unsigned int i = 0; i < num_packets; ++i) {
-        if ((i!=num_packets-1)||(payload_end_final==0)){
+        if ((i!=num_packets-1)||((array_len%(max_payload/4))==0)){
             packet_size=16+payload_end*4;
         }else{
-            packet_size=16+payload_end_final*4;
+            packet_size=16+(array_len%(max_payload/4))*4;
         }
 
         // Allocate memory for the packet
