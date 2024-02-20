@@ -119,7 +119,10 @@ unsigned int packetize_array_sf(int *array, unsigned int array_len, unsigned cha
 {
 
     //printf("%d", packets_len);
-    unsigned int num_packets = (array_len + max_payload - 1) / max_payload;
+    unsigned int num_packets = (array_len*4) / max_payload;
+    if ((array_len*4) %max_payload!=0){
+        num_packets+=1;
+    }
     if (num_packets > packets_len) {
         num_packets = packets_len; // Adjust the number of packets if packets_len is not enough
     }
@@ -131,7 +134,7 @@ unsigned int packetize_array_sf(int *array, unsigned int array_len, unsigned cha
     if (payload_end > array_len) {
         payload_end_final = array_len%(max_payload/4); // Adjust payload_end if it exceeds array_len
     }
-    for (unsigned int i = 0; i < num_packets; i++) {
+    for (unsigned int i = 0; i < num_packets; ++i) {
         if ((i!=num_packets-1)||(payload_end_final==0)){
             packet_size=16+payload_end*4;
         }else{
@@ -170,7 +173,6 @@ unsigned int packetize_array_sf(int *array, unsigned int array_len, unsigned cha
         packets[i][12] |= (checksum >> 16) & 0x7F;
         packets[i][13] = (checksum >> 8) & 0xFF; // Wrong
         packets[i][14] = checksum & 0xFF;
-       // print_packet_sf(packets[i]);
         
     }
 
