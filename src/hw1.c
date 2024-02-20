@@ -118,13 +118,13 @@ unsigned int packetize_array_sf(int *array, unsigned int array_len, unsigned cha
                           unsigned int compression_scheme, unsigned int traffic_class)
 {
 
-    unsigned int num_packets = (array_len+(max_payload/4)-1/(max_payload/4));
+    unsigned int num_packets = (array_len*4) / max_payload;
     // (array_len+(max_payload/4)-1/(max_payload/4));
     // (array_len*4) / max_payload;
 
-    // if ((array_len*4) %max_payload!=0){
-    //     num_packets++;
-    // }
+    if ((array_len*4) %max_payload!=0){
+        num_packets++;
+    }
     if (num_packets > packets_len) {
         num_packets = packets_len; // Adjust the number of packets if packets_len is not enough
     }
