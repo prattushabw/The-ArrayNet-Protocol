@@ -140,7 +140,7 @@ unsigned int packetize_array_sf(int *array, unsigned int array_len, unsigned cha
         if ((i!=num_packets-1)||(payload_end_final==0)){
             packet_size=16+payload_end*4;
         }else{
-            packet_size=16+payload_end_final*4;
+            packet_size=16+((array_len*4) %max_payload);
         }
 
         // Allocate memory for the packet
