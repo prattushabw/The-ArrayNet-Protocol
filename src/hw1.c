@@ -118,10 +118,11 @@ unsigned int packetize_array_sf(int *array, unsigned int array_len, unsigned cha
                           unsigned int compression_scheme, unsigned int traffic_class)
 {
 
-    //printf("%d", packets_len);
-    unsigned int num_packets = (array_len*4) / max_payload;
+    unsigned int num_packets = (array_len+(max_payload/4)-1/(max_payload/4));
+    // (array_len*4) / max_payload;
+
     if ((array_len*4) %max_payload!=0){
-        num_packets+=1;
+        num_packets++;
     }
     if (num_packets > packets_len) {
         num_packets = packets_len; // Adjust the number of packets if packets_len is not enough
@@ -154,11 +155,10 @@ unsigned int packetize_array_sf(int *array, unsigned int array_len, unsigned cha
         packets[i][6] = dest_addr & 0xFF;
         packets[i][7] = (src_port << 4) | (dest_port & 0xF);
         packets[i][8] = (i * max_payload) >> 6; // Fragment Offset
-        packets[i][9] = ((i * max_payload) & 0x3F) << 2 | (packet_size >> 12); //packet length
-        packets[i][10] = (packet_size& 0xFF)>>4 ; //packet length
-        packets[i][11] = (packet_size& 0xF) << 4 | ((maximum_hop_count & 0x1E) >> 1); //packet length 
+        
         packets[i][12] = ((maximum_hop_count & 0x01) << 7);
         packets[i][15]=((compression_scheme & 0x03) << 6) | (traffic_class & 0x3F);
+        
         
         //filling payload WRONG
         for (unsigned int j = payload_start; j < payload_end; ++j) {
@@ -167,14 +167,16 @@ unsigned int packetize_array_sf(int *array, unsigned int array_len, unsigned cha
             packets[i][18 + (j - payload_start) * 4] = (array[(i*max_payload/4)+j-payload_start] >> 8) & 0xFF;
             packets[i][19 + (j - payload_start) * 4] = array[(i*max_payload/4)+j-payload_start] & 0xFF; 
         }
+        packets[i][9] = ((i * max_payload) & 0x3F) << 2 | (packet_size >> 12); //packet length
+        packets[i][10] = (packet_size& 0xFF)>>4 ; //packet length
+        packets[i][11] = (packet_size& 0xF) << 4 | ((maximum_hop_count & 0x1E) >> 1); //packet length 
         
         // Calculate Checksum
         unsigned int checksum = compute_checksum_sf(packets[i]);
         packets[i][12] |= (checksum >> 16) & 0x7F;
         packets[i][13] = (checksum >> 8) & 0xFF; // Wrong
         packets[i][14] = checksum & 0xFF;
-        
     }
 
-    return packets_len;
+    return num_packets;
 }
