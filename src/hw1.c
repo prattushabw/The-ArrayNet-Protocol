@@ -130,7 +130,7 @@ unsigned int packetize_array_sf(int *array, unsigned int array_len, unsigned cha
     }
     unsigned int payload_start = 0;
     unsigned int payload_end = max_payload/4;
-    unsigned int payload_end_final=0;
+    unsigned int payload_end_final=array_len%(max_payload/4);
     unsigned int  packet_size=0;
 
     if (payload_end > array_len) {
@@ -140,7 +140,7 @@ unsigned int packetize_array_sf(int *array, unsigned int array_len, unsigned cha
         if ((i!=num_packets-1)||(payload_end_final==0)){
             packet_size=16+payload_end*4;
         }else{
-            packet_size=16+((array_len*4) % max_payload);
+            packet_size=16+payload_end_final*4;
         }
 
         // Allocate memory for the packet
@@ -163,14 +163,10 @@ unsigned int packetize_array_sf(int *array, unsigned int array_len, unsigned cha
         
         //filling payload WRONG
         for (unsigned int j = payload_start; j < payload_end; ++j) {
-            unsigned int array_index = (i * (max_payload/4)) + j;
-            if (array_index < array_len) {
-                unsigned int payload_index = (j - payload_start) * 4;
-                packets[i][16 + payload_index] = (array[array_index] >> 24) & 0xFF;
-                packets[i][17 + payload_index] = (array[array_index] >> 16) & 0xFF;
-                packets[i][18 + payload_index] = (array[array_index] >> 8) & 0xFF;
-                packets[i][19 + payload_index] = array[array_index] & 0xFF;
-            }
+            packets[i][16 + (j - payload_start) * 4] = (array[(i*max_payload/4)+j-payload_start] >> 24) & 0xFF;
+            packets[i][17 + (j - payload_start) * 4] = (array[(i*max_payload/4)+j-payload_start] >> 16) & 0xFF;
+            packets[i][18 + (j - payload_start) * 4] = (array[(i*max_payload/4)+j-payload_start] >> 8) & 0xFF;
+            packets[i][19 + (j - payload_start) * 4] = array[(i*max_payload/4)+j-payload_start] & 0xFF; 
         }
         packets[i][9] = ((i * max_payload) & 0x3F) << 2 | (packet_size >> 12); //packet length
         packets[i][10] = (packet_size& 0xFF)>>4 ; //packet length
